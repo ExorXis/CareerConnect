@@ -23,7 +23,6 @@
 ## ⚙️ How to Run Locally
 
 1. **Clone the repository:**
-   ```bash
    git clone [https://github.com/ExorXis/CareerConnect.git](https://github.com/ExorXis/CareerConnect.git)
 2. **Setup Database:**
    * Create a MySQL database named career_connect_db.
@@ -32,5 +31,4 @@
    * Navigate to the project directory and run the application using Maven or your preferred IDE (Eclipse/IntelliJ/STS).
    * The application will start on http://localhost:8080.
 
-## Developer
 *Developed by Alok*
