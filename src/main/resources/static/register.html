@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CareerConnect | Sign Up</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <a href="#" onclick="toggleTheme()" style="position: absolute; top: 25px; right: 35px; color: #00c6d0; text-decoration: none; font-size: 1.5rem; transition: 0.3s;" onmouseover="this.style.textShadow='0 0 10px #00c6d0'" onmouseout="this.style.textShadow='none'">
+        <i class="fa-solid fa-circle-half-stroke"></i>
+    </a>
+
+    <div class="auth-container">
+        <img src="careerconnectlogo_final.png" alt="Logo" class="reg-logo">
+
+        <div class="login-box">
+            <h2>Join CareerConnect</h2>
+            <input type="text" id="regName" placeholder="Full Name">
+            <input type="email" id="regEmail" placeholder="Email Address">
+            <input type="password" id="regPass" placeholder="Create Password">
+            
+            <button onclick="submitRegister()" class="btn">Sign Up</button>
+            <p id="regMessage" style="margin-top: 15px; font-size: 0.9rem; height: 20px;"></p>
+            
+            <a href="login.html" style="display: block; margin-top: 20px; color: #ccc; text-decoration: none; font-size: 0.85rem;">Already have an account? <b style="color: #00c6d0; font-weight: 400;">Login here</b></a>
+        </div>
+    </div>
+
+    <script>
+        // THEME MEMORY
+        function toggleTheme() {
+            document.body.classList.toggle("light-theme");
+            let theme = document.body.classList.contains("light-theme") ? "light" : "dark";
+            localStorage.setItem("siteTheme", theme);
+        }
+
+        async function submitRegister() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+            const msg = document.getElementById('regMessage');
+
+            if(!name || !email || !pass) {
+                msg.style.color = "#ff4c4c";
+                msg.innerText = "Please fill all the details!";
+                return;
+            }
+
+            msg.style.color = "#aaaaaa";
+            msg.innerText = "Registering...";
+
+            try {
+                const response = await fetch('/api/users/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: name, email: email, password: pass })
+                });
+
+                const text = await response.text();
+                msg.innerText = text;
+
+                if(text.includes("Successful")) {
+                    msg.style.color = "#4caf50";
+                    // Jump to login
+                    setTimeout(() => window.location.href = "login.html", 2000);
+                } else {
+                    msg.style.color = "#ff4c4c";
+                }
+            } catch(e) {
+                msg.style.color = "#ff4c4c";
+                msg.innerText = "Server Error! Is Spring Boot running?";
+            }
+        }
+
+        // Enter Key Event Listener
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                submitRegister();
+            }
+        });
+    </script>
+</body>
+</html>

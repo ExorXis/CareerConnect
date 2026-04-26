@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CareerConnect | Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=M+PLUS+Rounded+1c&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Tenor+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">CareerConnect</div>
+        <div class="navlinks">
+            <a href="#" onclick="toggleTheme()" style="margin-right: 20px;"><i class="fa-solid fa-circle-half-stroke"></i> Theme</a>
+            <a href="admin.html" id="adminLink" style="display: none; margin-right: 20px;"><i class="fa-solid fa-lock"></i> Admin</a>
+            <a href="login.html"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Available Opportunities</h1>
+        <div id="jobList" class="job-grid"></div>
+    </div>
+
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #00c6d0; margin-top: 0; text-shadow: 0 0 2px #00c6d0; font-weight: 300">Success! <i class="fa-solid fa-check-circle"></i></h2>
+            <p id="modalMessage">Application Sent! HR will review it soon.</p>
+            <button class="apply-btn" onclick="closeModal()" style="margin-top: 20px; width: 100%; font-weight: 500; font-size: 1rem">Keep Searching</button>
+        </div>
+    </div>
+
+    <script>
+        // THEME MEMORY
+        function toggleTheme() {
+            document.body.classList.toggle("light-theme");
+            let theme = document.body.classList.contains("light-theme") ? "light" : "dark";
+            localStorage.setItem("siteTheme", theme);
+        }
+
+        async function loadJobs() {
+            const response = await fetch('/api/jobs/all');
+            const jobs = await response.json();
+            const list = document.getElementById('jobList');
+            list.innerHTML = jobs.map(job => `
+                <div class="job-card">
+                    <h3>${job.title}</h3>
+                    <p><strong>Company:</strong> ${job.companyName}</p>
+                    <p>${job.description}</p>
+                    <button class="apply-btn" onclick="apply(event, ${job.id})">Apply Now</button>
+                </div>
+            `).join('');
+        }
+
+        async function apply(event, jobId) {
+            // Target the button clicked
+            const btn = event.target;
+            btn.innerText = "Applying...";
+            btn.disabled = true; // To prevent repetetive clicks
+
+            try {
+                // Sending request to JobController
+                const userEmail = localStorage.getItem("userEmail");
+                const response = await fetch(`/api/jobs/apply/${jobId}?email=${userEmail}`, { method: 'POST' });
+
+                const resultText = await response.text();
+                
+                // Convert buttone to Green Tick
+                btn.innerText = "Applied ✓";
+                btn.style.backgroundColor = "#4caf50";
+                btn.style.color = "white";
+                btn.style.borderColor = "#4caf50";
+                btn.style.boxShadow = "0 0 5px #4caf50";
+                
+                // "Application Successful!" pop-up
+                document.getElementById('modalMessage').innerText = resultText;
+                document.getElementById('customModal').style.display = 'flex'; 
+            } catch (error) {
+                btn.innerText = "Apply Now";
+                btn.disabled = false;
+                alert("Server Error! Something went wrong.");
+            }
+        }
+        loadJobs();
+
+        // Admin panel security 
+        const currentUser = localStorage.getItem("userEmail");
+        // Only this email will get access to admin panel
+        if (currentUser === "admin@careerconnect.com") {
+            document.getElementById('adminLink').style.display = "inline";
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

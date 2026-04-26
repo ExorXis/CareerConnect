@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CareerConnect | Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=M+PLUS+Rounded+1c&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Tenor+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><i class="fa-solid fa-user-shield"></i> Admin Workspace</div>
+        <div>
+            <a href="#" onclick="toggleTheme()" style="margin-right: 20px;"><i class="fa-solid fa-circle-half-stroke"></i> Theme</a>
+            <a href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <h2>Post a New Opportunity</h2>
+        <input type="text" id="jobTitle" placeholder="Job Title (e.g. Senior Java Developer)">
+        <input type="text" id="compName" placeholder="Company Name (e.g. Google)">
+        <textarea id="jobDesc" placeholder="Enter full job description and requirements..."></textarea>
+        
+        <button onclick="postJob()" class="post-btn">Publish Job <i class="fa-solid fa-rocket"></i></button>
+        <p id="statusMessage"></p>
+    </div>
+
+    <div class="admin-container" style="background: #001010; padding: 30px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+        <h2 class="app-heading">Recent Applications</h2>
+        <div class="table-wrapper" style="overflow-x: auto;">
+            <table class="app-table">
+                <thead>
+                    <tr>
+                        <th>Applicant's Name</th>
+                        <th>Email ID</th>
+                        <th>Applied For</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="appBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // THEME MEMORY
+        function toggleTheme() {
+            document.body.classList.toggle("light-theme");
+            let theme = document.body.classList.contains("light-theme") ? "light" : "dark";
+            localStorage.setItem("siteTheme", theme);
+        }
+
+        // Check for admin on page start
+        if (localStorage.getItem("userEmail") !== "admin@careerconnect.com") {
+            alert("Only Admin can access this page. Redirecting to Dashboard...");
+            window.location.href = "dashboard.html"; // Redirect to dashboard
+        }
+
+        // Post new job
+        async function postJob() {
+            const title = document.getElementById('jobTitle').value.trim();
+            const company = document.getElementById('compName').value.trim();
+            const desc = document.getElementById('jobDesc').value.trim();
+            const msg = document.getElementById('statusMessage');
+
+            if(!title || !company || !desc) {
+                msg.style.color = "#ff4c4c";
+                msg.innerText = "Fields cannot be empty";
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/jobs/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ title: title, companyName: company, description: desc })
+                });
+                
+                if(response.ok) {
+                    msg.style.color = "#4caf50";
+                    msg.innerText = "Job Live! Redirecting to Dashboard...";
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 1000);
+                }
+            } catch (error) {
+                msg.style.color = "#ff4c4c";
+                msg.innerText = "Server Error!";
+            }
+        }
+
+        // Get Jobs and Names from Database
+        async function loadApplications() {
+            try {
+                const response = await fetch('/api/jobs/applications');
+                const apps = await response.json();
+                const tbody = document.getElementById('appBody');
+                
+                tbody.innerHTML = apps.map(app => `
+                    <tr>
+                        <td><strong>${app.user.name}</strong></td>
+                        <td>${app.user.email}</td>
+                        <td style="color: white;">${app.job.title}</td>
+                        <td>${app.job.companyName}</td>
+                        <td style="color: #4caf50;">${app.status} ✓</td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                console.log("Error loading applications");
+            }
+        }
+
+        // Fill table when the page loads
+        loadApplications();
+
+        // Enter Key Event Listener
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                postJob();
+            }
+        });
+    </script>
+</body>
+</html>
